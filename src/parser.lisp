@@ -11,13 +11,13 @@
         (let ((char (read-non-space-char stream)))
           (if (eq char #\<)
               (read-element stream)
-              (error "Wrong format."))))
+              (error "Wrong format1."))))
       (with-open-stream (stream (make-string-input-stream xml))
         (read-xml-declaration stream)
         (let ((char (read-non-space-char stream)))
           (if (eq char #\<)
               (read-element stream)
-              (error "Wrong format."))))))
+              (error "Wrong format2."))))))
 
 (defun read-non-space-char (stream)
   (loop
@@ -67,7 +67,8 @@
                            finally (return attributes))))
         (if (eq (read-char stream) #\>)
             (cons :|?xml| attributes)
-            (error "Wrong tag")))))
+            (error "Wrong tag")))
+      (error "Wrong XML declaration.")))
 
 (defun read-element (stream &optional first-char)
   ;; The stream starts after the first char - #\<
@@ -127,7 +128,7 @@
       (cond ((eq first-char #\/)
              (if (eq (read-char stream) #\>)
                  (cons (intern tag-name :keyword) attributes)
-                 (error "Wrong format.")))
+                 (error "Wrong format3.")))
             ((eq first-char #\>)
              (setf first-char (read-non-space-char stream))
              (loop with content
