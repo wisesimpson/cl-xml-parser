@@ -142,9 +142,9 @@
                     (cond ((eq char #\/)
                            (loop for char across tag-name
                               unless (eq char (read-char stream))
-                              return (error "Wrong close tag."))
+                              return (error "Wrong close tag. tag-name: ~S" tag-name))
                            (unless (eq (read-char stream) #\>)
-                             (error "Wrong close tag."))
+                             (error "Wrong close tag.2"))
                            (return
                              (append (list (intern tag-name :keyword)) attributes content)))
                           (t
