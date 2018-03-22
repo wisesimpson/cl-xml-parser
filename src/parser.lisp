@@ -4,6 +4,14 @@
   (:export :list-to-xml :xml-to-list :get-element-content))
 (in-package :cl-xml-parser)
 
+(defparameter white-space-characters '(#\newline #\linefeed #\space #\tab))
+
+(defun read-non-space-char (stream)
+  (loop
+     for char = (read-char stream)
+     unless (member char white-space-characters)
+     return char))
+
 (defun xml-to-list (xml)
   (if (probe-file xml)
       (with-open-file (stream (probe-file xml))
@@ -19,22 +27,13 @@
               (read-element stream)
               (error "Wrong format2."))))))
 
-(defun read-non-space-char (stream)
-  (loop
-     for char = (read-char stream)
-     unless (or (eq char #\newline) (eq char #\linefeed) (eq char #\space))
-     return char))
-
 (defun read-xml-declaration (stream)
   (if (and (eq (read-non-space-char stream) #\<)
            (eq (read-char stream) #\?)
            (eq (read-char stream) #\x)
            (eq (read-char stream) #\m)
            (eq (read-char stream) #\l)
-           (let ((char (read-char stream)))
-             (or (eq char #\space)
-                 (eq char #\newline)
-                 (eq char #\linefeed))))
+           (member (read-char stream) white-space-characters))
       (let ((attributes (loop for char = (read-non-space-char stream)
                            until (eq char #\?)
                            appending
@@ -59,10 +58,7 @@
                              (let ((char (read-char stream)))
                                (cond ((eq char #\?)
                                       (return attributes))
-                                     ((not
-                                       (or (eq char #\space)
-                                           (eq char #\newline)
-                                           (eq char #\linefeed)))
+                                     ((not (member char white-space-characters))
                                       (error "Wrong attribute ending."))))
                            finally (return attributes))))
         (if (eq (read-char stream) #\>)
@@ -77,17 +73,13 @@
                                         (prog1 first-char
                                           (setf first-char nil))
                                         (read-char stream))
-                      until (or (eq char #\space)
-                                (eq char #\newline)
-                                (eq char #\linefeed)
+                      until (or (member char white-space-characters)
                                 (eq char #\/)
                                 (eq char #\>))
                       collect char
                       finally (setf first-char char))
                    'string)))
-    (if (or (eq first-char #\space)
-            (eq first-char #\newline)
-            (eq first-char #\linefeed))
+    (if (member first-char white-space-characters)
         (setf first-char (read-non-space-char stream)))
     (let ((attributes
            (loop for char = (if first-char
@@ -119,10 +111,7 @@
                   (cond ((or (eq char #\/)
                              (eq char #\>))
                          (setf first-char char))
-                        ((not
-                          (or (eq char #\space)
-                              (eq char #\newline)
-                              (eq char #\linefeed)))
+                        ((not (member char white-space-characters))
                          (error "Wrong attribute ending."))))                   
               finally (setf first-char char))))
       (cond ((eq first-char #\/)
@@ -155,7 +144,7 @@
                   (setf content
                         (append content
                                 (list
-                                 (string-trim '(#\space #\newline #\linefeed)
+                                 (string-trim white-space-characters
                                               (coerce
                                                (cons char
                                                      (loop for char = (read-char stream)
