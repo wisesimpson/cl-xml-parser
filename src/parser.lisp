@@ -12,6 +12,21 @@
      unless (member char white-space-characters)
      return char))
 
+(defun string-unescape (string)
+  (cl-ppcre:regex-replace-all
+   "&amp;"
+   (cl-ppcre:regex-replace-all
+    "&gt;"
+    (cl-ppcre:regex-replace-all
+     "&lt;"
+     (cl-ppcre:regex-replace-all
+      "&apos;"
+      (cl-ppcre:regex-replace-all "&quot;" string "\"")
+      "'")
+     "<")
+    ">")
+   "&"))
+
 (defun xml-to-dom (xml)
   (cond ((streamp xml)
          (if (eq #\< (read-non-space-char xml))
@@ -60,11 +75,12 @@
                                 'string)
                                :keyword)
                               (if (eq (read-char stream) #\")
-                                  (coerce
-                                   (loop for char = (read-char stream)
-                                      until (eq char #\")
-                                      collect char)
-                                   'string)
+                                  (string-unescape
+                                   (coerce
+                                    (loop for char = (read-char stream)
+                                       until (eq char #\")
+                                       collect char)
+                                    'string))
                                   (error "Wrong attribute value format")))
                            into attributes
                            do
@@ -158,11 +174,12 @@
                           'string)
                          :keyword)
                         (if (eq (read-char stream) #\")
-                            (coerce
-                             (loop for char = (read-char stream)
-                                until (eq char #\")
-                                collect char)
-                             'string)
+                            (string-unescape
+                             (coerce
+                              (loop for char = (read-char stream)
+                                 until (eq char #\")
+                                 collect char)
+                              'string))
                             (error "Wrong attribute value format")))
                      finally (setf current-char char))))
              (cond ((eq current-char #\/)
@@ -178,12 +195,13 @@
                                       and do (setf next-char (read-non-space-char stream))
                                       else collect
                                         (string-trim white-space-characters
-                                                     (coerce
-                                                      (cons char
-                                                            (loop for char = (read-char stream)
-                                                               until (eq char #\<)
-                                                               collect char))
-                                                      'string))
+                                                     (string-unescape
+                                                      (coerce
+                                                       (cons char
+                                                             (loop for char = (read-char stream)
+                                                                until (eq char #\<)
+                                                                collect char))
+                                                       'string)))
                                       and do (setf next-char #\<))))
                       (loop for char across tag-name
                          unless (eq char (read-char stream))
