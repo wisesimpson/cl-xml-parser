@@ -204,11 +204,19 @@
                                                        'string)))
                                       and do (setf next-char #\<))))
                       (loop for char across tag-name
-                         unless (eq char (read-char stream))
-                         return (error "Wrong close tag. tag-name: ~S" tag-name))
+			 and char2 = (read-char stream)
+			 collecting char2 into chars
+			 unless (eq char char2)
+                         return (error 'open-tag
+				       :element (append (list (intern tag-name :keyword)) attributes content)
+				       :chars (coerce chars 'string)))
                       (if (eq (read-char stream) #\>)
                           (append (list (intern tag-name :keyword)) attributes content)
                           (error "Wrong close tag. tag-name: ~S" tag-name))))))))))
+
+(define-condition open-tag (error)
+  ((element :initarg :element :reader element)
+   (chars :initarg :chars :reader chars)))
 
 (defun element-content (element)
   (subseq element (+ (or (position-if #'symbolp (cdr element) :from-end t) -2) 3)))
