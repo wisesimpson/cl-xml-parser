@@ -1,7 +1,7 @@
 (in-package :cl-user)
 (defpackage :cl-xml-parser
   (:use :cl)
-  (:export :dom-to-xml :xml-to-dom :element-content :element-attributes :element-attribute :xml))
+  (:export :dom-to-xml :xml-to-dom :element-content :element-attributes :element-attribute :xml :html-to-dom))
 (in-package :cl-xml-parser)
 
 (defparameter white-space-characters '(#\newline #\return #\space #\tab))
@@ -203,20 +203,32 @@
                                                                 collect char))
                                                        'string)))
                                       and do (setf next-char #\<))))
-                      (loop for char across tag-name
-			 and char2 = (read-char stream)
-			 collecting char2 into chars
-			 unless (eq char char2)
-                         return (error 'open-tag
-				       :element (append (list (intern tag-name :keyword)) attributes content)
-				       :chars (coerce chars 'string)))
-                      (if (eq (read-char stream) #\>)
-                          (append (list (intern tag-name :keyword)) attributes content)
-                          (error "Wrong close tag. tag-name: ~S" tag-name))))))))))
+                      (restart-case
+                          (progn
+                            (loop for char across tag-name
+                               as i from 0
+                               as char2 = (read-char stream)
+                               unless (eq char char2)
+                               do
+                                 (unread-char char2 stream)
+                                 (if (> i 0)
+                                     (loop for j from (- i 1) to 0
+                                        do (unread-char (elt tag-name j) stream)))
+                                 (unread-char #\/ stream)
+                                 (unread-char #\< stream)
+                               and return (error 'open-tag
+                                                 :element (append (list (intern tag-name :keyword)) attributes content)))
+                            (let ((char (read-char stream)))
+                              (if (eq char #\>)
+                                  (append (list (intern tag-name :keyword)) attributes content)
+                                  (progn
+                                    (unread-char char stream)
+                                    (error 'open-tag
+                                           :element (append (list (intern tag-name :keyword)) attributes content))))))
+                        (accept-open-tag () (append (list (intern tag-name :keyword)) attributes content)))))))))))
 
 (define-condition open-tag (error)
-  ((element :initarg :element :reader element)
-   (chars :initarg :chars :reader chars)))
+  ((element :initarg :element :reader element)))
 
 (defun element-content (element)
   (subseq element (+ (or (position-if #'symbolp (cdr element) :from-end t) -2) 3)))
@@ -251,6 +263,12 @@
               (format nil "~a" element))
           (if elements
               (apply #'dom-to-xml elements))))
+
+(defun html-to-dom (element &rest elements)
+  (handler-bind ((open-tag
+                  #'(lambda (condition)
+                      (invoke-restart 'accept-open-tag))))
+    (apply 'xml-to-dom element elements)))
 
 (defmacro make-element-list (element)
   (if (and (listp element)
