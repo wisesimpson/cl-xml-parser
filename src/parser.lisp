@@ -198,12 +198,12 @@
                         (cons (intern tag-name :keyword) attributes)
                         (error "Wrong format 3.")))
                    ((eq current-char #\>)
-                    (let ((content (loop for char = (read-non-space-char stream) then next-char
+                    (let ((content (loop for char = (read-non-white-space-character stream) then next-char
                                          as next-char = (if (eq char #\<) (read-char stream))
                                          until (and next-char (eq next-char #\/))
                                          if (eq char #\<)
                                            collect (read-element stream next-char)
-                                           and do (setf next-char (read-non-space-char stream))
+                                           and do (setf next-char (read-non-white-space-character stream))
                                          else collect
                                               (string-trim white-space-characters
                                                            (string-unescape
