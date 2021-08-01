@@ -8,9 +8,9 @@
 
 (defun read-non-white-space-character (stream &optional (eof-error-p t) eof-value)
   (loop
-    for char = (read-char stream eof-error-p eof-value)
-    unless (member char white-space-characters)
-      return char))
+     for char = (read-char stream eof-error-p eof-value)
+     unless (member char white-space-characters)
+     return char))
 
 (defun string-unescape (string)
   (cl-ppcre:regex-replace-all
@@ -31,21 +31,21 @@
   (cond ((streamp xml)
          (let (xml-declaration DTDs element)
            (loop for char = (read-non-white-space-character xml)
-                 if (eq char #\<)
-                   do (let ((char (read-char xml)))
-                        (cond ((eq char #\?)
-                               (if DTDs
-                                   (error "XML declaration should be the first.")
-                                   (setf xml-declaration (read-xml-declaration xml))))
-                              ((eq char #\!)
-                               (let ((char (read-char xml)))
-                                 (cond ((eq char #\-)
-                                        (read-comment xml))
-                                       ((eq char #\D)
-                                        (push (read-DTD xml) DTDs))
-                                       (t (error "Unknown element. ~a" char)))))
-                              (t (return (read-element xml char)))))
-                 else do (error "Wrong format. Expacting <"))))
+              if (eq char #\<)
+              do (let ((char (read-char xml)))
+                   (cond ((eq char #\?)
+                          (if DTDs
+                              (error "XML declaration should be the first.")
+                              (setf xml-declaration (read-xml-declaration xml))))
+                         ((eq char #\!)
+                          (let ((char (read-char xml)))
+                            (cond ((eq char #\-)
+                                   (read-comment xml))
+                                  ((eq char #\D)
+                                   (push (read-DTD xml) DTDs))
+                                  (t (error "Unknown element. ~a" char)))))
+                         (t (return (read-element xml char)))))
+              else do (error "Wrong format. Expacting <"))))
         ((ignore-errors (probe-file xml))
          (with-open-file (stream (probe-file xml))
            (xml-to-dom stream)))
@@ -59,33 +59,33 @@
            (eq (read-char stream) #\l)
            (member (read-char stream) white-space-characters))
       (let ((attributes (loop for char = (read-non-white-space-character stream)
-                              until (eq char #\?)
-                              appending
-                              (list
-                               (intern
-                                (coerce
-                                 (cons char
-                                       (loop for char = (read-char stream)
-                                             until (eq char #\=)
-                                             collect char))
-                                 'string)
-                                :keyword)
-                               (if (eq (read-char stream) #\")
-                                   (string-unescape
-                                    (coerce
-                                     (loop for char = (read-char stream)
-                                           until (eq char #\")
-                                           collect char)
-                                     'string))
-                                   (error "Wrong attribute value format")))
-                                into attributes
-                              do
-                                 (let ((char (read-char stream)))
-                                   (cond ((eq char #\?)
-                                          (return attributes))
-                                         ((not (member char white-space-characters))
-                                          (error "Wrong attribute ending."))))
-                              finally (return attributes))))
+                           until (eq char #\?)
+                           appending
+                             (list
+                              (intern
+                               (coerce
+                                (cons char
+                                      (loop for char = (read-char stream)
+                                         until (eq char #\=)
+                                         collect char))
+                                'string)
+                               :keyword)
+                              (if (eq (read-char stream) #\")
+                                  (string-unescape
+                                   (coerce
+                                    (loop for char = (read-char stream)
+                                       until (eq char #\")
+                                       collect char)
+                                    'string))
+                                  (error "Wrong attribute value format")))
+                           into attributes
+                           do
+                             (let ((char (read-char stream)))
+                               (cond ((eq char #\?)
+                                      (return attributes))
+                                     ((not (member char white-space-characters))
+                                      (error "Wrong attribute ending."))))
+                           finally (return attributes))))
         (if (eq (read-char stream) #\>)
             (cons :|?xml| attributes)
             (error "Wrong tag")))
@@ -96,13 +96,13 @@
       (list :!--
             (coerce
              (loop
-               for i = (read-char stream) then j
-               and j = (read-char stream) then k
-               and k = (read-char stream)
-               until (and (eq i #\-)
-                          (eq j #\-)
-                          (eq k #\>))
-               collect i)
+                for i = (read-char stream) then j
+                and j = (read-char stream) then k
+                and k = (read-char stream)
+                until (and (eq i #\-)
+                           (eq j #\-)
+                           (eq k #\>))
+                collect i)
              'string))
       (error "Wrong comment format.")))
 
@@ -116,8 +116,8 @@
            (member (read-char stream) white-space-characters))
       (coerce
        (loop for char = (read-char stream)
-             until (eq char #\>)
-             collect char)
+          until (eq char #\>)
+          collect char)
        'string)
       (error "Wrong DTD format.")))
 
@@ -130,13 +130,13 @@
            (eq #\[ (read-char stream)))
       (coerce
        (loop
-         for i = (read-char stream) then j
-         and j = (read-char stream) then k
-         and k = (read-char stream)
-         until (and (eq i #\])
-                    (eq j #\])
-                    (eq k #\>))
-         collect i)
+          for i = (read-char stream) then j
+          and j = (read-char stream) then k
+          and k = (read-char stream)
+          until (and (eq i #\])
+                     (eq j #\])
+                     (eq k #\>))
+          collect i)
        'string)
       (error "Wrong CDATA format.")))
 
@@ -154,81 +154,81 @@
         (t
          (let ((tag-name (coerce
                           (loop for char = current-char then (read-char stream)
-                                until (or (member char white-space-characters)
-                                          (eq char #\/)
-                                          (eq char #\>))
-                                collect char
-                                finally
-                                   (setf current-char
-                                         (if (member char white-space-characters)
-                                             (read-non-white-space-character stream)
-                                             char)))
+                             until (or (member char white-space-characters)
+                                       (eq char #\/)
+                                       (eq char #\>))
+                             collect char
+                             finally
+                               (setf current-char
+                                     (if (member char white-space-characters)
+                                         (read-non-white-space-character stream)
+                                         char)))
                           'string)))
            (let ((attributes
-                   (loop for char = current-char then (let ((char (read-char stream)))
-                                                        (cond ((or (eq char #\/)
-                                                                   (eq char #\>))
-                                                               char)
-                                                              ((member char white-space-characters)
-                                                               (read-non-white-space-character stream))
-                                                              (t (error "Wrong attribute ending."))))
-                         until (or (eq char #\/)
-                                   (eq char #\>))
-                         append
-                         (list
-                          (intern
-                           (coerce
-                            (cons char
-                                  (loop for char = (read-char stream)
-                                        until (eq char #\=)
-                                        collect char))
-                            'string)
-                           :keyword)
-                          (if (eq (read-char stream) #\")
-                              (string-unescape
-                               (coerce
+                  (loop for char = current-char then (let ((char (read-char stream)))
+                                                       (cond ((or (eq char #\/)
+                                                                  (eq char #\>))
+                                                              char)
+                                                             ((member char white-space-characters)
+                                                              (read-non-white-space-character stream))
+                                                             (t (error "Wrong attribute ending."))))
+                     until (or (eq char #\/)
+                               (eq char #\>))
+                     append
+                       (list
+                        (intern
+                         (coerce
+                          (cons char
                                 (loop for char = (read-char stream)
-                                      until (eq char #\")
-                                      collect char)
-                                'string))
-                              (error "Wrong attribute value format")))
-                         finally (setf current-char char))))
+                                   until (eq char #\=)
+                                   collect char))
+                          'string)
+                         :keyword)
+                        (if (eq (read-char stream) #\")
+                            (string-unescape
+                             (coerce
+                              (loop for char = (read-char stream)
+                                 until (eq char #\")
+                                 collect char)
+                              'string))
+                            (error "Wrong attribute value format")))
+                     finally (setf current-char char))))
              (cond ((eq current-char #\/)
                     (if (eq (read-char stream) #\>)
                         (cons (intern tag-name :keyword) attributes)
                         (error "Wrong format 3.")))
                    ((eq current-char #\>)
                     (let ((content (loop for char = (read-non-white-space-character stream) then next-char
-                                         as next-char = (if (eq char #\<) (read-char stream))
-                                         until (and next-char (eq next-char #\/))
-                                         if (eq char #\<)
-                                           collect (read-element stream next-char)
-                                           and do (setf next-char (read-non-white-space-character stream))
-                                         else collect
-                                              (string-trim white-space-characters
-                                                           (string-unescape
-                                                            (coerce
-                                                             (cons char
-                                                                   (loop for char = (read-char stream)
-                                                                         until (eq char #\<)
-                                                                         collect char))
-                                                             'string)))
-                                              and do (setf next-char #\<))))
+                                      as next-char = (if (eq char #\<) (read-char stream))
+                                      until (and next-char (eq next-char #\/))
+                                      if (eq char #\<)
+                                      collect (read-element stream next-char)
+                                      and do (setf next-char (read-non-white-space-character stream))
+                                      else collect
+                                        (string-trim white-space-characters
+                                                     (string-unescape
+                                                      (coerce
+                                                       (cons char
+                                                             (loop for char = (read-char stream)
+                                                                until (eq char #\<)
+                                                                collect char))
+                                                       'string)))
+                                      and do (setf next-char #\<))))
                       (restart-case
                           (progn
                             (loop for char across tag-name
-                                  as i from 0
-                                  as char2 = (read-char stream)
-                                  unless (eq char char2)
-                                    do
-                                       (unread-char char2 stream)
-                                       (if (> i 0)
-                                           (loop for j from (- i 1) to 0
-                                                 do (unread-char (elt tag-name j) stream)))
-                                       (unread-char #\/ stream)
-                                       (unread-char #\< stream)
-                                    and return (error 'open-tag
-                                                      :element (append (list (intern tag-name :keyword)) attributes content)))
+                               as i from 0
+                               as char2 = (read-char stream)
+                               unless (eq char char2)
+                               do
+                                 (unread-char char2 stream)
+                                 (if (> i 0)
+                                     (loop for j from (- i 1) to 0
+                                        do (unread-char (elt tag-name j) stream)))
+                                 (unread-char #\/ stream)
+                                 (unread-char #\< stream)
+                               and return (error 'open-tag
+                                                 :element (append (list (intern tag-name :keyword)) attributes content)))
                             (let ((char (read-char stream)))
                               (if (eq char #\>)
                                   (append (list (intern tag-name :keyword)) attributes content)
@@ -246,9 +246,11 @@
   (subseq element (+ (or (position-if #'symbolp (cdr element) :from-end t) -2) 3)))
 
 (defun element-attributes (element)
-  (loop for i on (cdr element) by #'cddr
-        while (symbolp (car i))
-        append (subseq i 0 2)))
+  (subseq element 1
+          (loop for i on (cdr element) by #'cddr
+             for j = 1 then (+ j 2)
+             until (not (symbolp (car i)))
+             finally (return j))))
 
 (defun element-attribute (element attribute)
   (getf (element-attributes element) attribute))
@@ -259,14 +261,14 @@
               (if (> (length element) 0)
                   (let* ((tag (car element))
                          (attributes (loop for (key value) on (subseq element 1) by #'cddr
-                                           while (keywordp key)
-                                           collect (if value
-                                                       (format nil "~a=\"~a\"" key value)
-                                                       key)))
+                                        while (keywordp key)
+                                        collect (if value
+                                                    (format nil "~a=\"~a\"" key value)
+                                                    key)))
                          (children (let ((index (+ 1 (* 2 (length attributes)))))
                                      (if (> (length element) index)
                                          (loop for child in (subseq element index)
-                                               collect (dom-to-xml child))))))
+                                            collect (dom-to-xml child))))))
                     (if (element-content element)
                         (let ((tag-name tag))
                           (format nil "<~a~{ ~a~}>~{~a~}</~a>" tag-name attributes children tag-name))
@@ -278,8 +280,8 @@
 
 (defun html-to-dom (element &rest elements)
   (handler-bind ((open-tag
-                   #'(lambda (condition)
-                       (invoke-restart 'accept-open-tag))))
+                  #'(lambda (condition)
+                      (invoke-restart 'accept-open-tag))))
     (apply 'xml-to-dom element elements)))
 
 (defmacro make-element-list (element)
@@ -287,13 +289,13 @@
            (keywordp (car element)))
       (append (list 'list (car element))
               (loop for child in (subseq element 1)
-                    collect `(make-element-list ,child)))
+                 collect `(make-element-list ,child)))
       element))
 
 (defmacro xml (&rest elements)
   `(format nil "~{~a~}"
            (loop for element
-                   in ,(cons 'list
-                             (loop for element in elements
-                                   collect `(make-element-list ,element)))
-                 collect (dom-to-xml element))))
+              in ,(cons 'list
+                        (loop for element in elements
+                           collect `(make-element-list ,element)))
+              collect (dom-to-xml element))))
